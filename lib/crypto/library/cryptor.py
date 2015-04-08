@@ -12,12 +12,12 @@ from Naked.toolshed.system import file_size, stdout, stderr
 class Cryptor(object):
     """performs gpg encryption of one or more files"""
     def __init__(self, passphrase):
-        self.command_default = "gpg -z 1 --batch --force-mdc --cipher-algo AES256 -o "
-        self.command_nocompress = "gpg -z 0 --batch --force-mdc --cipher-algo AES256 -o "
-        self.command_maxcompress = "gpg -z 7 --batch --force-mdc --cipher-algo AES256 -o "
-        self.command_default_armored = "gpg -z 1 --armor --batch --force-mdc --cipher-algo AES256 -o "
-        self.command_nocompress_armored = "gpg -z 0 --armor --batch --force-mdc --cipher-algo AES256 -o "
-        self.command_maxcompress_armored = "gpg -z 7 --armor --batch --force-mdc --cipher-algo AES256 -o "
+        self.command_default = "gpg -z 1 --batch --force-mdc --cipher-algo AES256 "
+        self.command_nocompress = "gpg -z 0 --batch --force-mdc --cipher-algo AES256 "
+        self.command_maxcompress = "gpg -z 7 --batch --force-mdc --cipher-algo AES256 "
+        self.command_default_armored = "gpg -z 1 --armor --batch --force-mdc --cipher-algo AES256 "
+        self.command_nocompress_armored = "gpg -z 0 --armor --batch --force-mdc --cipher-algo AES256 "
+        self.command_maxcompress_armored = "gpg -z 7 --armor --batch --force-mdc --cipher-algo AES256 "
         self.passphrase = passphrase
         self.common_binaries = set(['.7z', '.gz', '.aac', '.app', '.avi', '.azw', '.bz2', '.deb', '.doc', '.dmg', '.exe', '.flv', '.gif', '.jar', '.jpg', '.mov', '.mp3', '.mp4', '.odt', '.oga', '.ogg', '.ogm', '.pdf', '.pkg', '.png', '.ppt', '.pps', '.psd', '.rar', '.rpm', '.tar', '.tif', '.wav', '.wma', '.wmv', '.xls', '.zip', '.aiff', '.docx', '.epub', '.flac', '.mpeg', '.jpeg', '.pptx', '.xlsx'])
         self.common_text = set(['.c', '.h', '.m', '.cc', '.js', '.pl', '.py', '.rb', '.sh', '.cpp', '.css', '.csv', '.php', '.rss', '.txt', '.xml', '.yml', '.java', '.json', '.html', '.yaml'])
@@ -29,7 +29,7 @@ class Cryptor(object):
     #------------------------------------------------------------------------------
     # encrypt_file : file encryption method
     #------------------------------------------------------------------------------
-    def encrypt_file(self, inpath, force_nocompress=False, force_compress=False, armored=False, checksum=False):
+    def encrypt_file(self, inpath, force_nocompress=False, force_compress=False, armored=False, checksum=False, name_encryption=False):
         """public method for single file encryption with optional compression, ASCII armored formatting, and file hash digest generation"""
         if armored:
             if force_compress:
@@ -52,8 +52,12 @@ class Cryptor(object):
                 else:
                     command_stub = self.command_nocompress
 
-        encrypted_outpath = self._create_outfilepath(inpath)
-        system_command = command_stub + encrypted_outpath + " --passphrase '" + self.passphrase + "' --symmetric " + inpath
+        if name_encryption:
+            # apparently only the file name (not the full path) is stored as the filename, this needs to be considered for decryption
+            command_stub = command_stub + " --set-filename '" + inpath + "'"
+
+        encrypted_outpath = self._create_outfilepath(inpath, name_encryption)
+        system_command = command_stub + " -o " + encrypted_outpath + " --passphrase '" + self.passphrase + "' --symmetric " + inpath
 
         try:
             response = muterun(system_command)
@@ -79,10 +83,10 @@ class Cryptor(object):
     #------------------------------------------------------------------------------
     # encrypt_files : multiple file encryption
     #------------------------------------------------------------------------------
-    def encrypt_files(self, file_list, force_nocompress=False, force_compress=False, armored=False, checksum=False):
+    def encrypt_files(self, file_list, force_nocompress=False, force_compress=False, armored=False, checksum=False, name_encryption=False):
         """public method for multiple file encryption with optional compression, ASCII armored formatting, and file hash digest generation"""
         for the_file in file_list:
-            self.encrypt_file(the_file, force_nocompress, force_compress, armored, checksum)
+            self.encrypt_file(the_file, force_nocompress, force_compress, armored, checksum, name_encryption)
 
     #------------------------------------------------------------------------------
     # cleanup : overwrite the passphrase in memory
@@ -95,8 +99,16 @@ class Cryptor(object):
     # PRIVATE methods
     #------------------------------------------------------------------------------
 
-    def _create_outfilepath(self, inpath):
+    def _create_outfilepath(self, inpath, name_encryption=False):
         """private method that generates the crypto saved file path string with a .crypt file type"""
+        if name_encryption:
+            import uuid, os
+            filename_uuid = str(uuid.uuid4())
+            if os.path.sep in inpath:
+                inpath = make_path(inpath[:inpath.rfind(os.path.sep)], filename_uuid)
+            else:
+                inpath = filename_uuid
+
         return inpath + '.crypt'
 
 

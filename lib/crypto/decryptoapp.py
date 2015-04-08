@@ -56,12 +56,15 @@ def main():
         # code for multi-file processing and commands that include options
         use_standard_output = False # print to stdout flag
         use_file_overwrite = False # overwrite existing files
+        name_decryption = False # decrypt embedded file name
 
         # set user option flags
         if c.option('--stdout') or c.option('-s'):
             use_standard_output = True
         if c.option('--overwrite') or c.option('-o'):
             use_file_overwrite = True
+        if c.option('--name') or c.option('-n'):
+            name_decryption = True
 
         directory_list = [] # directory paths included in the user entered paths from the command line
         file_list = [] # file paths included in the user entered paths from the command line (and inside directories entered)
@@ -156,6 +159,19 @@ def main():
                             pass
                     else:
                         system_command = "gpg --batch -o " + decrypted_filename + " --passphrase '" + passphrase + "' -d " + encrypted_file
+
+                        if name_decryption:
+                            # for unknown reasons using -d option explicitly does not work, but since it is the default, it shouldn't be required
+                            # TODO: the following two commands can help decipher the encrypted name, if you want to be able to display it
+                            #gpg --with-colons --list-packets foo.gpg
+                            #gpg --status-fd 1 --use-embedded-filename foo.gpg
+                            #decrypted_filename = 'decrypted_unknown_placeholder'
+                            system_command = "gpg --batch --use-embedded-filename --passphrase '" + passphrase + "' " + encrypted_file
+
+                            if use_file_overwrite:
+                                # gpg will query user to overwrite file, we will set the answer to yes
+                                system_command = "gpg --batch --use-embedded-filename --yes --passphrase '" + passphrase + "' " + encrypted_file
+
                         response = muterun(system_command)
 
                         if response.exitcode == 0:
@@ -168,6 +184,10 @@ def main():
                             # report the error
                             stderr(response.stderr)
                             stderr("Decryption failed for " + encrypted_file)
+
+                            if name_decryption:
+                                stdout("Hint #1: Are you sure there is an embedded file name present?")
+                                stdout("Hint #2: To overwrite existing files, use --overwrite option.")
 
                 # cleanup: remove the tmp file
                 if created_tmp_files:

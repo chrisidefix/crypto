@@ -78,6 +78,11 @@ def main():
         if c.option('--tar'):
             tar_folders = True
 
+        ## ENCRYPT FILE NAMES
+        name_encryption = False
+        if c.option('--name') or c.option('-n'):
+            name_encryption = True
+
         directory_list = [] # directory paths included in the user entered paths from the command line
         tar_directory_list = [] # directories, which need to be packaged as tar archives
         file_list = [] # file paths included in the user entered paths from the command line (and inside directories entered)
@@ -155,18 +160,18 @@ def main():
                 # run encryption based upon any passed switches
                 if ascii_armored:
                     if max_compress:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=True, armored=True, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=True, armored=True, checksum=report_checksum, name_encryption=name_encryption)
                     elif no_compress:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=True, force_compress=False, armored=True, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=True, force_compress=False, armored=True, checksum=report_checksum, name_encryption=name_encryption)
                     else:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=False, armored=True, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=False, armored=True, checksum=report_checksum, name_encryption=name_encryption)
                 else:
                     if max_compress:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=True, armored=False, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=True, armored=False, checksum=report_checksum, name_encryption=name_encryption)
                     elif no_compress:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=True, force_compress=False, armored=False, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=True, force_compress=False, armored=False, checksum=report_checksum, name_encryption=name_encryption)
                     else:
-                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=False, armored=False, checksum=report_checksum)
+                        the_cryptor.encrypt_files(file_list, force_nocompress=False, force_compress=False, armored=False, checksum=report_checksum, name_encryption=name_encryption)
 
                 # overwrite user entered passphrases
                 passphrase = ""
