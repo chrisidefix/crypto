@@ -103,7 +103,7 @@ class Cryptor(object):
         """private method that generates the crypto saved file path string with a .crypt file type"""
         if name_encryption:
             import uuid, os
-            filename_uuid = str(uuid.uuid4())
+            filename_uuid = str(uuid.uuid4().hex)
             if os.path.sep in inpath:
                 inpath = make_path(inpath[:inpath.rfind(os.path.sep)], filename_uuid)
             else:

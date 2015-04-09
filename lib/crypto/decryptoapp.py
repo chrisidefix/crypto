@@ -158,20 +158,48 @@ def main():
                         else: # decryption successful but we are in stdout flag so do not include any other output from decrypto
                             pass
                     else:
-                        system_command = "gpg --batch -o " + decrypted_filename + " --passphrase '" + passphrase + "' -d " + encrypted_file
-
                         if name_decryption:
-                            # for unknown reasons using -d option explicitly does not work, but since it is the default, it shouldn't be required
-                            # TODO: the following two commands can help decipher the encrypted name, if you want to be able to display it
+                            # new approach - extract the encrypted file name from package list and simply define it as the output name
+                            packets_command = "gpg --with-colons --list-packets --passphrase '" + passphrase + "' " + encrypted_file
+                            response = muterun(packets_command)
+                            response_stdout = response.stdout
+
+                            if ':literal data packet:' not in response_stdout or ', name=' not in response_stdout:
+                                stderr("Unable to decrypt filename from '" + encrypted_file + "'", 0)
+                            else:
+                                l_data_packet = response_stdout[response_stdout.rfind(':literal data packet:'):]
+                                l_data_packet = l_data_packet.replace(' ','')
+                                l_data_packet = l_data_packet.replace('\n','')
+                                l_data_packet = l_data_packet.replace('\t','')
+                                l_data_packet_split = l_data_packet.split(',')
+                                for l_data in l_data_packet_split:
+                                    if l_data.startswith('name="'):
+                                        l_file_name = l_data[6:-1]
+                                        if len(l_file_name) == 0:
+                                            stderr("Unable to decrypt filename from '" + encrypted_file + "'", 0)
+                                        else:
+                                            if os.path.sep in decrypted_filename:
+                                                decrypted_filename = make_path(decrypted_filename[:decrypted_filename.rfind(os.path.sep)],l_file_name)
+                                            else:
+                                                decrypted_filename = l_file_name
+                                        break
+
+                            # the following two commands can help decipher the encrypted name, if you want to be able to display it
                             #gpg --with-colons --list-packets foo.gpg
                             #gpg --status-fd 1 --use-embedded-filename foo.gpg
                             #decrypted_filename = 'decrypted_unknown_placeholder'
+
+                            '''
+                            # INITIAL idea
+                            # for unknown reasons using -d option explicitly does not work with --use-embedded-filename, but since '-d' is the default behaviour, it shouldn't be required
                             system_command = "gpg --batch --use-embedded-filename --passphrase '" + passphrase + "' " + encrypted_file
 
                             if use_file_overwrite:
                                 # gpg will query user to overwrite file, we will set the answer to yes
                                 system_command = "gpg --batch --use-embedded-filename --yes --passphrase '" + passphrase + "' " + encrypted_file
+                            '''
 
+                        system_command = "gpg --batch -o " + decrypted_filename + " --passphrase '" + passphrase + "' -d " + encrypted_file
                         response = muterun(system_command)
 
                         if response.exitcode == 0:
