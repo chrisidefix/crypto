@@ -3,7 +3,7 @@
 
 import sys
 from Naked.toolshed.shell import muterun
-from Naked.toolshed.system import file_size, stdout, stderr
+from Naked.toolshed.system import file_size, stdout, stderr, make_path
 
 #------------------------------------------------------------------------------
 # Cryptor class
