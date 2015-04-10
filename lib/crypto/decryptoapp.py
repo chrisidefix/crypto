@@ -57,20 +57,44 @@ def main():
         use_standard_output = False # print to stdout flag
         use_file_overwrite = False # overwrite existing files
         name_decryption = False # decrypt embedded file name
+        use_passphrase = False # passphrase provided
+        passphrase = ""
 
         # set user option flags
         if c.option('--stdout') or c.option('-s'):
             use_standard_output = True
+
         if c.option('--overwrite') or c.option('-o'):
             use_file_overwrite = True
+
         if c.option('--name') or c.option('-n'):
             name_decryption = True
+
+        if c.option('--passphrase', argument_required=True):
+            use_passphrase = True
+            passphrase = c.option_arg('--passphrase')
+            if len(passphrase) == 0: # confirm that user provided a passphrase
+                stderr("You did not enter a passphrase. Please provide a passphrase with your command and try again.")
+                sys.exit(1)
 
         directory_list = [] # directory paths included in the user entered paths from the command line
         file_list = [] # file paths included in the user entered paths from the command line (and inside directories entered)
 
+        skip_argument = False
+
         for argument in c.argv:
-            if file_exists(argument): # user included a file, add it to the file_list for decryption
+            if skip_argument:
+                skip_argument = False
+                pass
+            # check for options and option arguments first
+            elif argument[0] == "-":
+                if c.option_with_arg(argument) and '--passphrase' == argument:
+                    # do NOT consider the next 'argument' as input file, but assume it is the passphrase!
+                    # passing the next for iteration
+                    skip_argument = True
+                else:
+                    pass # if it is an option, do nothing
+            elif file_exists(argument): # user included a file, add it to the file_list for decryption
                 if argument.endswith('.crypt'):
                     file_list.append(argument) # add .crypt files to the list of files for decryption
                 elif argument.endswith('.gpg'):
@@ -86,10 +110,7 @@ def main():
             elif dir_exists(argument): # user included a directory, add it to the directory_list
                 directory_list.append(argument)
             else:
-                if argument[0] == "-":
-                    pass # if it is an option, do nothing
-                else:
-                    stderr("'" + argument + "' does not appear to be an existing file or directory.  Aborting decryption attempt for this request.", 0)
+                stderr("'" + argument + "' does not appear to be an existing file or directory. Aborting decryption attempt for this request.", 0)
 
         # unroll the contained directory files into the file_list IF they are encrypted file types
         if len(directory_list) > 0:
@@ -112,11 +133,14 @@ def main():
             sys.exit(1)
 
         # get passphrase used to symmetrically decrypt the file
-        passphrase = getpass.getpass("Please enter your passphrase: ")
-        if len(passphrase) == 0: # confirm that user entered a passphrase
-                stderr("You did not enter a passphrase. Please repeat your command and try again.")
-                sys.exit(1)
-        passphrase_confirm = getpass.getpass("Please enter your passphrase again: ")
+        if not use_passphrase:
+            passphrase = getpass.getpass("Please enter your passphrase: ")
+            if len(passphrase) == 0: # confirm that user entered a passphrase
+                    stderr("You did not enter a passphrase. Please repeat your command and try again.")
+                    sys.exit(1)
+            passphrase_confirm = getpass.getpass("Please enter your passphrase again: ")
+        else:
+            passphrase_confirm = passphrase
 
         if passphrase == passphrase_confirm:
             # begin decryption of each requested file.  the directory path was already added to the file path above

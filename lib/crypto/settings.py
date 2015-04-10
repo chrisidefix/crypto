@@ -83,11 +83,13 @@ CRYPTO OPTIONS
    --speed               Favor encryption speed over reduced file size
    --tar                 Create tar archives of directories before encryption
    --name  | -n          Encrypt file name embedded in a message
+   --passphrase <phrase> Provide passphrase (do not ask for user input)
 
 DECRYPTO OPTIONS
    --overwrite | -o      Overwrite an existing file with the decrypted file
    --stdout    | -s      Print file contents to the standard output stream
    --name      | -n      Decrypt and replace file name embedded inside the file
+   --passphrase <phrase> Provide passphrase (do not ask for user input)
 
 OTHER OPTIONS
    --help | -h           Display crypto and decrypto help

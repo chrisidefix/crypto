@@ -83,6 +83,16 @@ def main():
         if c.option('--name') or c.option('-n'):
             name_encryption = True
 
+        ## INPUT PASSPHRASE
+        passphrase = ""
+        use_passphrase = False
+        if c.option('--passphrase', argument_required=True):
+            use_passphrase = True
+            passphrase = c.option_arg('--passphrase')
+            if len(passphrase) == 0: # confirm that user provided a passphrase
+                stderr("You did not enter a passphrase. Please provide a passphrase with your command and try again.")
+                sys.exit(1)
+
         directory_list = [] # directory paths included in the user entered paths from the command line
         tar_directory_list = [] # directories, which need to be packaged as tar archives
         file_list = [] # file paths included in the user entered paths from the command line (and inside directories entered)
@@ -91,8 +101,20 @@ def main():
         contained_dot_file = False
         contained_crypt_file = False
 
+        skip_argument = False
         # determine if argument is an existing file or directory
         for argument in c.argv:
+            if skip_argument:
+                skip_argument = False
+                pass
+            # check for options and option arguments first
+            elif argument[0] == "-":
+                if c.option_with_arg(argument) and '--passphrase' == argument:
+                    # do NOT consider the next 'argument' as input file, but assume it is the passphrase!
+                    # passing the next for iteration
+                    skip_argument = True
+                else:
+                    pass # if it is an option, do nothing
             if file_exists(argument):
                 if argument.endswith('.crypt'): # do not include previously encrypted files
                     contained_crypt_file = True
@@ -132,12 +154,15 @@ def main():
                 stderr("Unable to identify files for encryption")
                 sys.exit(1)
         else:
-        # file_list should contain all filepaths from either user specified file paths or contained in top level of directory, encrypt them
-            passphrase = getpass.getpass("Please enter your passphrase: ")
-            if len(passphrase) == 0: # confirm that user entered a passphrase
-                stderr("You did not enter a passphrase. Please repeat your command and try again.")
-                sys.exit(1)
-            passphrase_confirm = getpass.getpass("Please enter your passphrase again: ")
+            # file_list should contain all filepaths from either user specified file paths or contained in top level of directory, encrypt them
+            if not use_passphrase:
+                passphrase = getpass.getpass("Please enter your passphrase: ")
+                if len(passphrase) == 0: # confirm that user entered a passphrase
+                    stderr("You did not enter a passphrase. Please repeat your command and try again.")
+                    sys.exit(1)
+                passphrase_confirm = getpass.getpass("Please enter your passphrase again: ")
+            else:
+                passphrase_confirm = passphrase
 
             if passphrase == passphrase_confirm:
 
