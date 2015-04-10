@@ -89,11 +89,9 @@ def main():
             # check for options and option arguments first
             elif argument[0] == "-":
                 if c.option_with_arg(argument) and '--passphrase' == argument:
-                    # do NOT consider the next 'argument' as input file, but assume it is the passphrase!
-                    # passing the next for iteration
+                    # if there is an option required for this argument, skip the next for iteration
                     skip_argument = True
-                else:
-                    pass # if it is an option, do nothing
+                pass # if it is an option, do nothing
             elif file_exists(argument): # user included a file, add it to the file_list for decryption
                 if argument.endswith('.crypt'):
                     file_list.append(argument) # add .crypt files to the list of files for decryption

@@ -110,18 +110,18 @@ def main():
             # check for options and option arguments first
             elif argument[0] == "-":
                 if c.option_with_arg(argument) and '--passphrase' == argument:
-                    # do NOT consider the next 'argument' as input file, but assume it is the passphrase!
-                    # passing the next for iteration
+                    # if there is an option required for this argument, skip the next for iteration
                     skip_argument = True
-                else:
-                    pass # if it is an option, do nothing
-            if file_exists(argument):
+                pass # if it is an option, do nothing
+            elif file_exists(argument):
                 if argument.endswith('.crypt'): # do not include previously encrypted files
                     contained_crypt_file = True
                 else:
                     file_list.append(argument) # add appropriate file paths to the file_list
             elif dir_exists(argument):
                 directory_list.append(argument) # if it is a directory, add path to the directory_list
+            else:
+                stderr("'" + argument + "' does not appear to be an existing file or directory. Aborting encryption attempt for this request.", 0)
 
         # add all file paths from user specified directories to the file_list
         if len(directory_list) > 0:
