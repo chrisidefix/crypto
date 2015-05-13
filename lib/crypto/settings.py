@@ -82,6 +82,7 @@ CRYPTO OPTIONS
    --space               Favor reduced file size over encryption speed
    --speed               Favor encryption speed over reduced file size
    --tar                 Create tar archive of directory of files before encryption
+   --parallel [#N]       Execute #N multiple encryption processes in parallel
 
 DECRYPTO OPTIONS
    --nountar             Do not automatically unpack decrypted tar archives
