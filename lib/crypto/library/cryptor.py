@@ -5,6 +5,22 @@ import sys
 from Naked.toolshed.shell import muterun
 from Naked.toolshed.system import file_size, stdout, stderr
 
+# maybe this function should be moved into a "utility" python file and then imported, but this works for now
+def encrypt_thread(data):
+    """performs threaded execution of file encryption. (python has a problem with this helper function being inside a class)"""
+    if len(data) != 6:
+        stderr("Invalid INPUT data length for encrypt_thread() call!")
+        return
+
+    self = data[0]
+    the_file = data[1]
+    force_nocompress=data[2]
+    force_compress=data[3]
+    armored=data[4]
+    checksum=data[5]
+
+    self.encrypt_file(the_file, force_nocompress, force_compress, armored, checksum)
+
 # ------------------------------------------------------------------------------
 # Cryptor class
 #   performs gpg encryption of one or more files
@@ -78,13 +94,21 @@ class Cryptor(object):
             stderr("There was a problem with the execution of gpg. Encryption failed. Error: [" + str(e) + "]")
             sys.exit(1)
 
+
     # ------------------------------------------------------------------------------
     # encrypt_files : multiple file encryption
     # ------------------------------------------------------------------------------
-    def encrypt_files(self, file_list, force_nocompress=False, force_compress=False, armored=False, checksum=False):
+    def encrypt_files(self, file_list, force_nocompress=False, force_compress=False, armored=False, checksum=False, parallel=0):
         """public method for multiple file encryption with optional compression, ASCII armored formatting, and file hash digest generation"""
-        for the_file in file_list:
-            self.encrypt_file(the_file, force_nocompress, force_compress, armored, checksum)
+        if parallel < 2:
+            for the_file in file_list:
+                self.encrypt_file(the_file, force_nocompress, force_compress, armored, checksum)
+        else:
+            from multiprocessing import Pool
+            process_pool = Pool(processes=parallel)
+            process_data = [[self, the_file, force_nocompress, force_compress, armored, checksum] for the_file in file_list]
+            process_pool.map(encrypt_thread, process_data)
+            process_data = []
 
     # ------------------------------------------------------------------------------
     # cleanup : overwrite the passphrase in memory
