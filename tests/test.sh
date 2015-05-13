@@ -16,6 +16,7 @@ MULTI_DIR="test_multi-directory.py"
 SINGLE_FILE="test_single-file.py"
 SINGLE_DIR="test_single-directory.py"
 UNICODE_PP="test_unicode-passphrase.py"
+PARALLEL_PP="test_multi-file-parallel.py"
 
 if [ "$1" = "all" ];then
 	"$TEST_COMMAND" "$NOSE_FLAGS" "$SINGLE_FILE" "$SINGLE_DIR"
@@ -43,6 +44,8 @@ elif [ "$1" = "single-dir" ];then
 	"$TEST_COMMAND" "$NOSE_FLAGS" "$SINGLE_DIR"
 elif [ "$1" = "unicode" ];then
 	"$TEST_COMMAND" "$NOSE_FLAGS" "$UNICODE_PP"
+elif [ "$1" = "parallel" ];then
+	"$TEST_COMMAND" "$NOSE_FLAGS" "$PARALLEL_PP"
 else
 	echo "Enter 'all' or a command suite to test."
 	exit 1
