@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from Naked.toolshed.shell import muterun
+from Naked.toolshed.shell import muterun, securun
 from Naked.toolshed.system import file_size, stdout, stderr
 
 from shellescape import quote
@@ -57,10 +57,15 @@ class Cryptor(object):
                     command_stub = self.command_nocompress
 
         encrypted_outpath = self._create_outfilepath(inpath)
-        system_command = command_stub + encrypted_outpath + " --passphrase " + quote(self.passphrase) + " --symmetric " + quote(inpath)
+        system_command = command_stub
+        system_arguments = quote(encrypted_outpath) + " --passphrase " + quote(self.passphrase) + " --symmetric " + quote(inpath)
 
         try:
-            response = muterun(system_command)
+            response = securun(system_command, system_arguments)
+
+            # overwrite system arguments (passphrase)
+            system_arguments = ""
+
             # check returned status code
             if response.exitcode == 0:
                 stdout(encrypted_outpath + " was generated from " + inpath)

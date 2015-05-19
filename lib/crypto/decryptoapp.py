@@ -159,8 +159,12 @@ def main():
                         else:  # decryption successful but we are in stdout flag so do not include any other output from decrypto
                             pass
                     else:
-                        system_command = "gpg --batch -o " + quote(decrypted_filename) + " --passphrase " + quote(passphrase) + " -d " + quote(encrypted_file)
-                        response = muterun(system_command)
+                        system_command = "gpg --batch -o "
+                        system_arguments = quote(decrypted_filename) + " --passphrase " + quote(passphrase) + " -d " + quote(encrypted_file)
+                        response = securun(system_command, system_arguments)
+
+                        # overwrite system arguments (passphrase)
+                        system_arguments = ""
 
                         if response.exitcode == 0:
                             stdout("'" + encrypted_file + "' decrypted to '" + decrypted_filename + "'")
@@ -263,8 +267,12 @@ def main():
 
             # confirm that the passphrases match
             if passphrase == passphrase_confirm:
-                system_command = "gpg --batch -o " + quote(decrypted_filename) + " --passphrase " + quote(passphrase) + " -d " + quote(path)
-                response = muterun(system_command)
+                system_command = "gpg --batch -o "
+                system_arguments = quote(decrypted_filename) + " --passphrase " + quote(passphrase) + " -d " + quote(path)
+                response = securun(system_command, system_arguments)
+
+                # overwrite system arguments (passphrase)
+                system_arguments = ""
 
                 if response.exitcode == 0:
                     # unpack tar archive generated from the decryption, if present
@@ -343,8 +351,12 @@ def main():
                     if file_exists(decrypted_filepath):
                         stdout("The file path '" + decrypted_filepath + "' already exists.  This file was not decrypted.")
                     else:
-                        system_command = "gpg --batch -o " + quote(decrypted_filepath) + " --passphrase " + quote(passphrase) + " -d " + quote(absolute_filepath)
-                        response = muterun(system_command)
+                        system_command = "gpg --batch -o "
+                        system_arguments = quote(decrypted_filepath) + " --passphrase " + quote(passphrase) + " -d " + quote(absolute_filepath)
+                        response = securun(system_command, system_arguments)
+
+                        # overwrite system arguments (passphrase)
+                        system_arguments = ""
 
                         if response.exitcode == 0:
                             stdout("'" + absolute_filepath + "' decrypted to '" + decrypted_filepath + "'")
