@@ -57,14 +57,14 @@ class Cryptor(object):
                     command_stub = self.command_nocompress
 
         encrypted_outpath = self._create_outfilepath(inpath)
-        system_command = command_stub
-        system_arguments = quote(encrypted_outpath) + " --passphrase " + quote(self.passphrase) + " --symmetric " + quote(inpath)
+        system_command = command_stub + quote(encrypted_outpath) + " --passphrase-fd 0 " + " --symmetric " + quote(inpath)
+        system_argument = quote(self.passphrase)
 
         try:
-            response = securun(system_command, system_arguments)
+            response = securun(system_command, system_argument)
 
             # overwrite system arguments (passphrase)
-            system_arguments = ""
+            system_argument = ""
 
             # check returned status code
             if response.exitcode == 0:
