@@ -15,7 +15,7 @@ def main():
     import getpass
     import tarfile
     from Naked.commandline import Command
-    from Naked.toolshed.shell import execute, muterun
+    from Naked.toolshed.shell import execute, muterun, piperun
     from Naked.toolshed.system import dir_exists, file_exists, list_all_files, make_path, stdout, stderr, is_dir
     from shellescape import quote
 
@@ -147,9 +147,12 @@ def main():
                 # begin decryption
                 if not skip_file:
                     if use_standard_output:  # using --quiet flag to suppress stdout messages from gpg, just want the file data in stdout stream
-                        # TODO: not very secure ...
-                        system_command = "gpg --batch --quiet --passphrase " + quote(passphrase) + " -d " + quote(encrypted_file)
-                        successful_execution = execute(system_command)  # use naked execute function to directly push to stdout, rather than return stdout
+                        system_command = "gpg --batch --quiet --passphrase-fd 0 " + " -d " + quote(encrypted_file)
+                        system_argument = passphrase # DO NOT quote THIS !
+                        successful_execution = piperun(system_command, system_argument)  # use naked execute function to directly push to stdout, rather than return stdout
+
+                        # overwrite system arguments (passphrase)
+                        system_argument = ""
 
                         if not successful_execution:
                             stderr("Unable to decrypt file '" + encrypted_file + "'", 0)
@@ -160,9 +163,9 @@ def main():
                         else:  # decryption successful but we are in stdout flag so do not include any other output from decrypto
                             pass
                     else:
-                        system_command = "gpg --batch -o " + quote(decrypted_filename) + " --passphrase-fd 0 " + " -d " + quote(encrypted_file)
-                        system_argument = quote(passphrase)
-                        response = securun(system_command, system_argument)
+                        system_command = "gpg --batch --quiet -o " + quote(decrypted_filename) + " --passphrase-fd 0 " + " -d " + quote(encrypted_file)
+                        system_argument = passphrase # DO NOT quote THIS !
+                        response = piperun(system_command, system_argument)
 
                         # overwrite system arguments (passphrase)
                         system_argument = ""
@@ -269,8 +272,8 @@ def main():
             # confirm that the passphrases match
             if passphrase == passphrase_confirm:
                 system_command = "gpg --batch -o " + quote(decrypted_filename) + " --passphrase-fd 0 " + " -d " + quote(path)
-                system_argument = quote(passphrase)
-                response = securun(system_command, system_argument)
+                system_argument = passphrase # DO NOT quote THIS !
+                response = piperun(system_command, system_argument)
 
                 # overwrite system arguments (passphrase)
                 system_argument = ""
@@ -353,8 +356,8 @@ def main():
                         stdout("The file path '" + decrypted_filepath + "' already exists.  This file was not decrypted.")
                     else:
                         system_command = "gpg --batch -o " + quote(decrypted_filepath) + " --passphrase-fd 0 " + " -d " + quote(absolute_filepath)
-                        system_argument = quote(passphrase)
-                        response = securun(system_command, system_argument)
+                        system_argument = passphrase # DO NOT quote THIS !
+                        response = piperun(system_command, system_argument)
 
                         # overwrite system arguments (passphrase)
                         system_argument = ""

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from Naked.toolshed.shell import muterun, securun
+from Naked.toolshed.shell import muterun, piperun
 from Naked.toolshed.system import file_size, stdout, stderr
 
 from shellescape import quote
@@ -58,10 +58,10 @@ class Cryptor(object):
 
         encrypted_outpath = self._create_outfilepath(inpath)
         system_command = command_stub + quote(encrypted_outpath) + " --passphrase-fd 0 " + " --symmetric " + quote(inpath)
-        system_argument = quote(self.passphrase)
+        system_argument = self.passphrase # DO NOT quote THIS !
 
         try:
-            response = securun(system_command, system_argument)
+            response = piperun(system_command, system_argument)
 
             # overwrite system arguments (passphrase)
             system_argument = ""
